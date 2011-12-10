@@ -3,9 +3,9 @@
 # ----------------------- #
 
 url: http://Imbalism.github.com
-title: My Octopress Blog
-subtitle: A blogging framework for hackers.
-author: Your Name
+title: I'm a Imbalism
+subtitle: Because life is Imbalanced
+author: Yunxing dai
 simple_search: http://google.com/search
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
@@ -95,4 +95,4 @@ disqus_show_comment_count: false
 google_analytics_tracking_id:
 
 # Facebook Like
-facebook_like: false
+facebook_like: true
