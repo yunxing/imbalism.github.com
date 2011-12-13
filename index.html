@@ -9,7 +9,8 @@
   <meta name="author" content="Yunxing dai">
 
   
-  <meta name="description" content="Although Hadoop provides a general way to handle distributed data, it is hard to write map reduce program every time you want to handle some data. At &hellip;">
+  <meta name="description" content="
+">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -69,7 +70,43 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2011/12/11/map-join-in-hive/">Map Join in Hive</a></h1>
+      <h1 class="entry-title"><a href="/blog/2011/12/11/http-pipeline/">HTTP Pipeline</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-11T03:53:00+08:00" pubdate data-updated="true">Dec 11<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content">
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/12/11/map-join-in-hive/">Better Map Join in Hive</a></h1>
     
     
       <p class="meta">
@@ -92,13 +129,39 @@
   </header>
 
 
-  <div class="entry-content"><p>Although <a href="hadoop.apache.org" title="Hadoop">Hadoop</a> provides a general way to handle distributed data, it is hard to write map reduce program every time you want to handle some data. At this time, <a href="hive.apache.org">Hive</a> comes into play to save people from the hell of map reduce.</p>
+  <div class="entry-content"><p>Although <a href="hadoop.apache.org" title="Hadoop">Hadoop</a> provides a general way to handle distributed data, it is hard to write map reduce program every time you want to handle some data. At this time, <a href="hive.apache.org">Hive</a> comes into play to save people from the hell of writing map reduce programs.</p>
 
 <p><img src="http://hadoop.apache.org/images/hadoop-logo.jpg" alt="Hadoop" /> <img src="http://hive.apache.org/images/hive_logo_medium.jpg" alt="Hive" /></p>
 
 <p>Hive is a data warehouse built on top of Hadoop. It provides a SQL-like interface so that SQL programmer can easily pick it up. Data warehouse means the operation for this database should be read-optimized. Instead of thousands of transactions at a time, there are not so many request to Hive, and most of these request should be query and bulk loading.</p>
 
-<p>Join is an important</p>
+<p>Join is an important part in query. How to proceed join fast is extremely important in this read-optimization scenario. An fairly straight forward way, which is called <strong>Common Join</strong>, to join in map-reduce environment is divided into 3 phases:</p>
+
+<ul>
+<li> <strong>map phase</strong> which split and read the whole table and emit key(join key) value(select value) pairs</li>
+<li> <strong>shuffle phase</strong> which merges and sorts these pairs by key</li>
+<li> <strong>reduce phase</strong> which does the actual join work by combining all the pairs with the same key together</li>
+</ul>
+
+
+<p>Amoung these three phases, shuffle phase is most time consuming. If a table is small enough to fit into mapper&#8217;s memory after it is converted into <em>hashtable</em>(with the same key value pair as mentioned above), then <strong>Map Join</strong> is introduced, which builds a hashtable file for the small table, copy the file to each mapper so that each mapper can probe a split of the bigtable and get the join result. By doing this way, the system can avoid shuffle and reduce phase, result in significant speed-up.</p>
+
+<p>Some points have to be clear</p>
+
+<ol>
+<li>A table in Hive is actually a file in file system.</li>
+<li>In map join, this relational table on disk is converted to a hashtable in memory.</li>
+<li>A small table file on disk could be too large to fit into memory for two reasons, the first one is it may be compressed, the other is that the key density could be high(a low key density means most keys are same in the relational table, after it turns into hashtable, all the pairs with the same key can be stored using just one key.).</li>
+</ol>
+
+
+<p>So here comes the question, how can we know if a table can fit into memory after it is converted into hashtable? Current solution of Hive is somewhat conservative, it just read the size of the table file. If it is larger than 25MB, Hive thinks it would be too large and do common join. If it is smaller than 25MB, Hive will do map join instead because it thinks this table can fit into memory.</p>
+
+<p>The above solution is somehow unreasonable because as we mentioned before, table file size has no so strong connect to hashtable size.</p>
+
+<p>Our course project in [EECS 584, Advanced Database System] aims at proposing a better selecting criteria for map join and common join.</p>
+
+<p>Instead of trying to infer hashtable size at runtime, our solution, in short, tries to get the exactly hashtable size when loading data into the table. That is, we build a hash table beforehand, when we loads data into the table. To reduce the amount of hashtables (Cound be 2<sup>N</sup> tables if we want to cover all the fields as potential join keys), we propose a way similar as building an index(we select interesting fields and maintain an index, instead of building indexes for every column combinations). A new keyword is proposed for this purpose, &#8221;<strong>PRECOMPUTE</strong>&#8221;.</p>
 </div>
   
   
@@ -119,7 +182,11 @@
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2011/12/11/map-join-in-hive/">Map join in Hive</a>
+        <a href="/blog/2011/12/11/http-pipeline/">HTTP Pipeline</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/12/11/map-join-in-hive/">Better Map join in Hive</a>
       </li>
     
   </ul>
