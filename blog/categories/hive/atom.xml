@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Hive | An Imbalist]]></title>
   <link href="http://Imbalism.github.com/blog/categories/hive/atom.xml" rel="self"/>
   <link href="http://Imbalism.github.com/"/>
-  <updated>2011-12-13T18:11:52+08:00</updated>
+  <updated>2011-12-20T09:34:39+08:00</updated>
   <id>http://Imbalism.github.com/</id>
   <author>
     <name><![CDATA[Yunxing dai]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Better Map join in Hive]]></title>
+    <title type="html"><![CDATA[A Better Map join in Hive]]></title>
     <link href="http://Imbalism.github.com/blog/2011/12/11/map-join-in-hive/"/>
     <updated>2011-12-11T01:47:00+08:00</updated>
     <id>http://Imbalism.github.com/blog/2011/12/11/map-join-in-hive</id>
@@ -50,7 +50,35 @@
 
 <p>Our course project in [EECS 584, Advanced Database System] aims at proposing a better selecting criteria for map join and common join.</p>
 
-<p>Instead of trying to infer hashtable size at runtime, our solution, in short, tries to get the exactly hashtable size when loading data into the table. That is, we build a hash table beforehand, when we loads data into the table. To reduce the amount of hashtables (Cound be 2<sup>N</sup> tables if we want to cover all the fields as potential join keys), we propose a way similar as building an index(we select interesting fields and maintain an index, instead of building indexes for every column combinations). A new keyword is proposed for this purpose, "<strong>PRECOMPUTE</strong>".</p>
+<p>Instead of trying to infer hashtable size at runtime, our solution, in short, tries to get the exactly hashtable size when loading data into the table. That is, we build a hash table beforehand, when we loads data into the table. To reduce the amount of hashtables (Cound be 2<sup>N</sup> tables if we want to cover all the fields as potential join keys), we propose a way similar as building an index(we select interesting fields and maintain an index, instead of building indexes for every column combinations). A new keyword is proposed for this purpose, "<strong>PRECOMPUTE</strong>". The usage of this keyword goes like this:</p>
+
+<pre><code>CREATE TABLE People(id STRING, name String, age INT) PRECOMPUTE id;
+</code></pre>
+
+<p>This will build a hashtable in advance in the memory. Note that <strong>once the hashtable exceeds the memory limits, the building process will automatically break and label this field as 'bad for hash'.</strong></p>
+
+<p>Another advantage of this is that, consider the following query, :</p>
+
+<pre><code>Select * FROM People p Where p.age = '0000001';
+</code></pre>
+
+<p>The query will build a hashtable for small table whose size equals 1 (because of the single selection predicate). This will definitely fits in the memory. However, in previous implementation, if the file size exceeds 25MBs (or whatever defined by user), Hive will use Common Join to execute it, although it can use mapjoin instead (because the hashtable can fit in the memory) and achieve better performance!</p>
+
+<p>In our implementation, since we've build a hashtable beforehand, we now how many different keys the table contains (denoted as ICARD) and the total memory consumption of this hashtable (denoted as S). We can then get the selection factor sf by following equation:</p>
+
+<pre><code>sf = 1 / ICARD
+</code></pre>
+
+<p>And we the the memory consumtion of this query's hashtable is:</p>
+
+<pre><code>S' = S * sf
+</code></pre>
+
+<p>also we can get other predict equations of other kind of predicats.</p>
+
+<p>If a hashtable with physical size S' can fit in mapper's memory, we use Map Join, otherwise, Common Join. This further increased the probabilities of using Map Join.</p>
+
+<p>As a conclusion, current implementation of Hive losses many opportunities of using Map Join. We improved the chance a little bit by precomputing hash table in advance, and leverage the heuristic information when we execute a query.</p>
 ]]></content>
   </entry>
   
