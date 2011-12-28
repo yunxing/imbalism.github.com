@@ -9,8 +9,8 @@
   <meta name="author" content="Yunxing dai">
 
   
-  <meta name="description" content="
-">
+  <meta name="description" content="What&#8217;s OTP OTP stands for Open Telecom Platform. Don&#8217;t be scared by its name,
+basically it is just a software framework. It is similart &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -70,7 +70,7 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2011/12/11/http-pipeline/">HTTP Pipeline</a></h1>
+      <h1 class="entry-title"><a href="/blog/2011/12/21/introduction-to-erlang-otp/">Introduction to Erlang OTP</a></h1>
     
     
       <p class="meta">
@@ -86,16 +86,397 @@
   
 
 
-<time datetime="2011-12-11T03:53:00+08:00" pubdate data-updated="true">Dec 11<span>th</span>, 2011</time>
+<time datetime="2011-12-21T16:35:00+08:00" pubdate data-updated="true">Dec 21<span>st</span>, 2011</time>
         
-         | <a href="/blog/2011/12/11/http-pipeline/#disqus_thread">Comments</a>
+         | <a href="/blog/2011/12/21/introduction-to-erlang-otp/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content">
+  <div class="entry-content"><h2>What&#8217;s OTP</h2>
+
+<p><code>OTP</code> stands for Open Telecom Platform. Don&#8217;t be scared by its name,
+basically it is just a software framework. It is similart to OO
+language that you can implement your own code(In OO is called
+sub-class, in Erlang or sequential language it is called call-back
+functions), insert them into interfaces(which is called <code>behaviour</code> in
+Erlang) provided by the framework and everything works.</p>
+
+<p>OTP provides all the trivial parts of writing a server, like error
+handling, concurrency issues, supervision tree and etc. Client
+developers are only required to implement the functional parts(for
+short, the &#8216;fun&#8217; parts).</p>
+
+<h2>gen_server</h2>
+
+<p><code>gen_server</code> is a module in Erlang that represents a generic
+server. It is the framework that we are talking about Earlier. So
+where is the interface that it provides in which we can plug our code?
+Just open your emacs in
+<a href="http://www.erlang.org/doc/apps/tools/erlang_mode_chapter.html">Erlang Mode</a>,
+select Menu->Erlang->Skeletons->gen_server, you can get a list of
+interface that you have to implement, which looks like this:</p>
+
+<figure class='code'><figcaption><span> (template.erl)</span> <a href='/downloads/code/template.erl'>download</a></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">gen_server_template</span><span class="p">).</span>
+</span><span class='line'><span class="p">-</span><span class="ni">behaviour</span><span class="p">(</span><span class="n">gen_server</span><span class="p">).</span>
+</span><span class='line'><span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">start_link</span><span class="o">/</span><span class="mi">0</span><span class="p">]).</span>
+</span><span class='line'><span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">init</span><span class="o">/</span><span class="mi">1</span><span class="p">,</span> <span class="n">handle_call</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">handle_cast</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">handle_info</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
+</span><span class='line'>   <span class="n">terminate</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">code_change</span><span class="o">/</span><span class="mi">3</span><span class="p">]).</span>
+</span><span class='line'><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">SERVER</span><span class="p">,</span> <span class="no">?MODULE</span><span class="p">).</span>
+</span><span class='line'><span class="p">-</span><span class="ni">record</span><span class="p">(</span><span class="nl">state</span><span class="p">,</span> <span class="p">{}).</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">start_link</span><span class="p">()</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nn">gen_server</span><span class="p">:</span><span class="n">start_link</span><span class="p">({</span><span class="n">local</span><span class="p">,</span> <span class="no">?SERVER</span><span class="p">},</span> <span class="no">?MODULE</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[]).</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">init</span><span class="p">([])</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">ok</span><span class="p">,</span> <span class="nl">#state</span><span class="p">{}}.</span>
+</span><span class='line'><span class="nf">handle_call</span><span class="p">(_</span><span class="nv">Request</span><span class="p">,</span> <span class="p">_</span><span class="nv">From</span><span class="p">,</span> <span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nv">Reply</span> <span class="o">=</span> <span class="n">ok</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">reply</span><span class="p">,</span> <span class="nv">Reply</span><span class="p">,</span> <span class="nv">State</span><span class="p">}.</span>
+</span><span class='line'><span class="nf">handle_cast</span><span class="p">(_</span><span class="nv">Msg</span><span class="p">,</span> <span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">noreply</span><span class="p">,</span> <span class="nv">State</span><span class="p">}.</span>
+</span><span class='line'><span class="nf">handle_info</span><span class="p">(_</span><span class="nv">Info</span><span class="p">,</span> <span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">noreply</span><span class="p">,</span> <span class="nv">State</span><span class="p">}.</span>
+</span><span class='line'><span class="nf">terminate</span><span class="p">(_</span><span class="nv">Reason</span><span class="p">,</span> <span class="p">_</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="n">ok</span><span class="p">.</span>
+</span><span class='line'><span class="nf">code_change</span><span class="p">(_</span><span class="nv">OldVsn</span><span class="p">,</span> <span class="nv">State</span><span class="p">,</span> <span class="p">_</span><span class="nv">Extra</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">ok</span><span class="p">,</span> <span class="nv">State</span><span class="p">}.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The first function, start_link/0, is used to start a local server
+called ?SERVER with a callback module ?MODULE. other arguments can be
+omitted now.</p>
+
+<p>The new few six methods is what we are going to implement in the next step:</p>
+
+<h2>Online Banking System </h2>
+
+<p>A transaction system with withdraw and deposit would be a perfect
+example for a gen_server. Our server has to implement a few callback
+functions to support this behaviour. We will use
+<a href="http://www.erlang.org/doc/man/ets.html">Erlang ETS</a> as a storage
+engine. So, first, change the init/0 method so it looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nf">init</span><span class="p">([])</span>     <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">ok</span><span class="p">,</span> <span class="nn">ets</span><span class="p">:</span><span class="n">new</span><span class="p">(</span><span class="no">?MODULE</span><span class="p">,</span> <span class="p">[])}.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It simply create a new table with the table name equals to module
+name. Also, it pass its second argument, which is the table we&#8217;ve
+just created, as the initial state of the server.</p>
+
+<p>We need to support remote call to this server, so we have to overide
+the handle_call function so it looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nf">handle_call</span><span class="p">({</span><span class="n">new</span><span class="p">,</span> <span class="nv">Who</span><span class="p">},</span> <span class="p">_</span><span class="nv">From</span><span class="p">,</span> <span class="nv">Tab</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nv">Reply</span> <span class="o">=</span> <span class="k">case</span> <span class="nn">ets</span><span class="p">:</span><span class="n">lookup</span><span class="p">(</span><span class="nv">Tab</span><span class="p">,</span> <span class="nv">Who</span><span class="p">)</span> <span class="k">of</span>
+</span><span class='line'>      <span class="p">[]</span> <span class="o">-&gt;</span> <span class="nn">ets</span><span class="p">:</span><span class="n">insert</span><span class="p">(</span><span class="nv">Tab</span><span class="p">,</span> <span class="p">{</span><span class="nv">Who</span><span class="p">,</span> <span class="mi">0</span><span class="p">}),</span>
+</span><span class='line'>            <span class="p">{</span><span class="n">welcome</span><span class="p">,</span> <span class="nv">Who</span><span class="p">};</span>
+</span><span class='line'>      <span class="p">[_]</span> <span class="o">-&gt;</span> <span class="p">{</span><span class="nv">Who</span><span class="p">,</span> <span class="n">you_already_are_a_customer</span><span class="p">}</span>
+</span><span class='line'>      <span class="k">end</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">reply</span><span class="p">,</span> <span class="nv">Reply</span><span class="p">,</span> <span class="nv">Tab</span><span class="p">};</span>
+</span><span class='line'><span class="nf">handle_call</span><span class="p">({</span><span class="n">add</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="nv">X</span><span class="p">},</span> <span class="p">_</span><span class="nv">From</span><span class="p">,</span> <span class="nv">Tab</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nv">Reply</span> <span class="o">=</span> <span class="k">case</span> <span class="nn">ets</span><span class="p">:</span><span class="n">lookup</span><span class="p">(</span><span class="nv">Tab</span><span class="p">,</span> <span class="nv">Who</span><span class="p">)</span> <span class="k">of</span>
+</span><span class='line'>      <span class="p">[]</span> <span class="o">-&gt;</span> <span class="n">not_a_customer</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">[{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Balance</span><span class="p">}]</span> <span class="o">-&gt;</span>
+</span><span class='line'>          <span class="nv">NewBalance</span> <span class="o">=</span> <span class="nv">Balance</span> <span class="o">+</span> <span class="nv">X</span><span class="p">,</span>
+</span><span class='line'>          <span class="nn">ets</span><span class="p">:</span><span class="n">insert</span><span class="p">(</span><span class="nv">Tab</span><span class="p">,</span> <span class="p">{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">NewBalance</span><span class="p">}),</span>
+</span><span class='line'>          <span class="p">{</span><span class="n">thanks</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="n">your_balance_is</span><span class="p">,</span> <span class="nv">NewBalance</span><span class="p">}</span>
+</span><span class='line'>      <span class="k">end</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">reply</span><span class="p">,</span> <span class="nv">Reply</span><span class="p">,</span> <span class="nv">Tab</span><span class="p">};</span>
+</span><span class='line'><span class="nf">handle_call</span><span class="p">({</span><span class="n">remove</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="nv">X</span><span class="p">},</span> <span class="p">_</span><span class="nv">From</span><span class="p">,</span> <span class="nv">Tab</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nv">Reply</span> <span class="o">=</span> <span class="k">case</span> <span class="nn">ets</span><span class="p">:</span><span class="n">lookup</span><span class="p">(</span><span class="nv">Tab</span><span class="p">,</span> <span class="nv">Who</span><span class="p">)</span> <span class="k">of</span>
+</span><span class='line'>      <span class="p">[]</span> <span class="o">-&gt;</span> <span class="n">not_a_customer</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">[{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Balance</span><span class="p">}]</span> <span class="k">when</span> <span class="nv">X</span> <span class="o">=&lt;</span> <span class="nv">Balance</span> <span class="o">-&gt;</span>
+</span><span class='line'>          <span class="nv">NewBalance</span> <span class="o">=</span> <span class="nv">Balance</span> <span class="o">-</span> <span class="nv">X</span><span class="p">,</span>
+</span><span class='line'>          <span class="nn">ets</span><span class="p">:</span><span class="n">insert</span><span class="p">(</span><span class="nv">Tab</span><span class="p">,</span> <span class="p">{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">NewBalance</span><span class="p">}),</span>
+</span><span class='line'>          <span class="p">{</span><span class="n">thanks</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="n">your_balance_is</span><span class="p">,</span> <span class="nv">NewBalance</span><span class="p">};</span>
+</span><span class='line'>      <span class="p">[{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Balance</span><span class="p">}]</span> <span class="o">-&gt;</span>
+</span><span class='line'>          <span class="p">{</span><span class="n">sorry</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="n">you_only_have</span><span class="p">,</span> <span class="nv">Balance</span><span class="p">,</span> <span class="n">in_the_bank</span><span class="p">}</span>
+</span><span class='line'>      <span class="k">end</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">reply</span><span class="p">,</span> <span class="nv">Reply</span><span class="p">,</span> <span class="nv">Tab</span><span class="p">};</span>
+</span><span class='line'><span class="nf">handle_call</span><span class="p">(</span><span class="n">stop</span><span class="p">,</span> <span class="p">_</span><span class="nv">From</span><span class="p">,</span> <span class="nv">Tab</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="p">{</span><span class="n">stop</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">stopped</span><span class="p">,</span> <span class="nv">Tab</span><span class="p">}.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In this code, argument Tab maintains the <code>state</code> of the server, the
+initial state is defined by init function, which we&#8217;ve talked about
+ealier.</p>
+
+<p>So, that&#8217;s it. The code is quite straightforward. A point worth noting
+here is that Handle_call here is just like a controller in MVC
+architecture. Which redirect the request to different logic.</p>
+
+<p>How to call this server? It is simple with gen_server:call:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nn">gen_server</span><span class="p">:</span><span class="n">call</span><span class="p">(</span><span class="no">?MODULE</span><span class="p">,</span> <span class="p">{</span><span class="n">new</span><span class="p">,</span> <span class="nv">Who</span><span class="p">}).</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>?MODULE</code> here stands for the server name, which we&#8217;ve specified
+at the start_link process. Now let&#8217;s write another wrapper for the
+server so the user can use it with out interact with gen_server
+module:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nf">start</span><span class="p">()</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nn">gen_server</span><span class="p">:</span><span class="n">start_link</span><span class="p">({</span><span class="n">local</span><span class="p">,</span> <span class="no">?MODULE</span><span class="p">},</span> <span class="no">?MODULE</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[]).</span>
+</span><span class='line'><span class="nf">stop</span><span class="p">()</span>  <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nn">gen_server</span><span class="p">:</span><span class="n">call</span><span class="p">(</span><span class="no">?MODULE</span><span class="p">,</span> <span class="n">stop</span><span class="p">).</span>
+</span><span class='line'>  
+</span><span class='line'><span class="nf">new_account</span><span class="p">(</span><span class="nv">Who</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nn">gen_server</span><span class="p">:</span><span class="n">call</span><span class="p">(</span><span class="no">?MODULE</span><span class="p">,</span> <span class="p">{</span><span class="n">new</span><span class="p">,</span> <span class="nv">Who</span><span class="p">}).</span>
+</span><span class='line'><span class="nf">deposit</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nn">gen_server</span><span class="p">:</span><span class="n">call</span><span class="p">(</span><span class="no">?MODULE</span><span class="p">,</span> <span class="p">{</span><span class="n">add</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">}).</span>
+</span><span class='line'><span class="nf">withdraw</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nn">gen_server</span><span class="p">:</span><span class="n">call</span><span class="p">(</span><span class="no">?MODULE</span><span class="p">,</span> <span class="p">{</span><span class="n">remove</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">}).</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Start our shell(presee C-c C-z in Emacs) and test it, here is our example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="mi">1</span><span class="o">&gt;</span> <span class="nn">my_bank</span><span class="p">:</span><span class="n">start</span><span class="p">().</span>
+</span><span class='line'><span class="p">{</span><span class="n">ok</span><span class="p">,</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">34</span><span class="p">.</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">}</span>
+</span><span class='line'><span class="mi">2</span><span class="o">&gt;</span> <span class="nn">my_bank</span><span class="p">:</span><span class="n">new_account</span><span class="p">(</span><span class="s">&quot;Joe&quot;</span><span class="p">).</span>
+</span><span class='line'><span class="p">{</span><span class="n">welcome</span><span class="p">,</span><span class="s">&quot;Joe&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="mi">3</span><span class="o">&gt;</span> <span class="nn">my_bank</span><span class="p">:</span><span class="n">deposit</span><span class="p">(</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">).</span>
+</span><span class='line'><span class="p">{</span><span class="n">thanks</span><span class="p">,</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span><span class="n">your_balance_is</span><span class="p">,</span><span class="mi">100</span><span class="p">}</span>
+</span><span class='line'><span class="mi">4</span><span class="o">&gt;</span> <span class="nn">my_bank</span><span class="p">:</span><span class="n">deposit</span><span class="p">(</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">).</span>
+</span><span class='line'><span class="p">{</span><span class="n">thanks</span><span class="p">,</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span><span class="n">your_balance_is</span><span class="p">,</span><span class="mi">110</span><span class="p">}</span>
+</span><span class='line'><span class="mi">5</span><span class="o">&gt;</span> <span class="nn">my_bank</span><span class="p">:</span><span class="n">deposit</span><span class="p">(</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">).</span>
+</span><span class='line'><span class="p">{</span><span class="n">thanks</span><span class="p">,</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span><span class="n">your_balance_is</span><span class="p">,</span><span class="mi">210</span><span class="p">}</span>
+</span><span class='line'><span class="mi">6</span><span class="o">&gt;</span> <span class="nn">my_bank</span><span class="p">:</span><span class="n">withdraw</span><span class="p">(</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">).</span>
+</span><span class='line'><span class="p">{</span><span class="n">thanks</span><span class="p">,</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span><span class="n">your_balance_is</span><span class="p">,</span><span class="mi">110</span><span class="p">}</span>
+</span><span class='line'><span class="mi">7</span><span class="o">&gt;</span> <span class="nn">my_bank</span><span class="p">:</span><span class="n">withdraw</span><span class="p">(</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span> <span class="mi">300</span><span class="p">).</span>
+</span><span class='line'><span class="p">{</span><span class="n">sorry</span><span class="p">,</span><span class="s">&quot;Joe&quot;</span><span class="p">,</span><span class="n">you_only_have</span><span class="p">,</span><span class="mi">110</span><span class="p">,</span><span class="n">in_the_bank</span><span class="p">}</span>
+</span><span class='line'><span class="mi">8</span><span class="o">&gt;</span> <span class="nn">my_bank</span><span class="p">:</span><span class="n">stop</span><span class="p">().</span>
+</span><span class='line'><span class="n">stopped</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/12/20/introduction-to-erlang/">Introduction to Erlang</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-20T23:08:00+08:00" pubdate data-updated="true">Dec 20<span>th</span>, 2011</time>
+        
+         | <a href="/blog/2011/12/20/introduction-to-erlang/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The term <a href="http://www.erlang.org/">Erlang</a> comes from &#8216;Erission
+Language&#8217;. It is designed for telecommunication industry with
+concurrency in mind.</p>
+
+<p>The most famous application of Erlang would probably be Facebook chat
+and Tencent QQ. Both are IM services that can support millions of
+users sending messages at the same time.</p>
+
+<p>Let&#8217;s start with a simple application so that you can have a basic
+understanding of how beautiful Erlang is.</p>
+
+<p>Suppose we have to implement a message passing ring of N nodes(A node
+is a process), a message will be passing through the ring for M
+times. Besides, we need to profile the program, see how much time it
+needs to be finished.</p>
+
+<p>Before you read the code written in Erlang, first think about how you
+can implement this in C or C++ code.</p>
+
+<p>Here we go, ready for some beautiful code?</p>
+
+<figure class='code'><figcaption><span> (ring.erl)</span> <a href='/downloads/code/ring.erl'>download</a></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">ring</span><span class="p">).</span>
+</span><span class='line'><span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">start</span><span class="o">/</span><span class="mi">2</span><span class="p">]).</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">gen</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nv">Y</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nb">spawn</span><span class="p">(</span><span class="k">fun</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">loop</span><span class="p">(</span><span class="nv">Y</span><span class="p">)</span> <span class="k">end</span><span class="p">);</span>
+</span><span class='line'><span class="nf">gen</span><span class="p">(</span><span class="nv">N</span><span class="p">,</span> <span class="nv">Y</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="n">gen</span><span class="p">(</span><span class="nv">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">spawn</span><span class="p">(</span><span class="k">fun</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">loop</span><span class="p">(</span><span class="nv">Y</span><span class="p">)</span> <span class="k">end</span><span class="p">)).</span>
+</span><span class='line'><span class="nf">gen</span><span class="p">(</span><span class="nv">N</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="n">gen</span><span class="p">(</span><span class="nv">N</span><span class="p">,</span> <span class="nb">spawn</span><span class="p">(</span><span class="k">fun</span> <span class="n">loop</span><span class="o">/</span><span class="mi">0</span><span class="p">)).</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">start</span><span class="p">(</span><span class="nv">N</span><span class="p">,</span> <span class="nv">M</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nv">Pid</span> <span class="o">=</span> <span class="n">gen</span><span class="p">(</span><span class="nv">N</span><span class="p">),</span>
+</span><span class='line'>    <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;start time:</span><span class="si">~p~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nn">erlang</span><span class="p">:</span><span class="n">now</span><span class="p">()]),</span>
+</span><span class='line'>    <span class="nv">Pid</span> <span class="o">!</span> <span class="p">{</span><span class="nv">Pid</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="n">self</span><span class="p">()},</span>
+</span><span class='line'>    <span class="k">receive</span>
+</span><span class='line'>  <span class="n">finished</span><span class="o">-&gt;</span>
+</span><span class='line'>      <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;end time:</span><span class="si">~p~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nn">erlang</span><span class="p">:</span><span class="n">now</span><span class="p">()])</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">loop</span><span class="p">()</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="k">receive</span>
+</span><span class='line'>  <span class="p">{_</span><span class="nv">Next</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">}</span><span class="o">-&gt;</span>
+</span><span class='line'>      <span class="nv">Dist</span><span class="o">!</span><span class="n">finished</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">{</span><span class="nv">Next</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">}</span><span class="o">-&gt;</span>
+</span><span class='line'>      <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;loop </span><span class="si">~p</span><span class="s"> finished</span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">M</span><span class="p">]),</span>
+</span><span class='line'>      <span class="nv">Next</span> <span class="o">!</span> <span class="p">{</span><span class="nv">Next</span><span class="p">,</span> <span class="nv">M</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">},</span>
+</span><span class='line'>      <span class="n">loop</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">loop</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="k">receive</span>    
+</span><span class='line'>  <span class="p">{</span><span class="nv">Src</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">}</span> <span class="o">-&gt;</span>
+</span><span class='line'>      <span class="nv">X</span> <span class="o">!</span> <span class="p">{</span><span class="nv">Src</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">},</span>
+</span><span class='line'>      <span class="n">loop</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p>Now that we&#8217;ve seen some code in Erlang. if you seen it is cool, you
+can go on with me and learn some basic concepts of it.</p>
 </div>
   
   
@@ -171,19 +552,23 @@ the pairs with the same key can be stored using just one key.).</li>
 
 <p>Instead of trying to infer hashtable size at runtime, our solution, in short, tries to get the exactly hashtable size when loading data into the table. That is, we build a hash table beforehand, when we loads data into the table. To reduce the amount of hashtables (Cound be 2<sup>N</sup> tables if we want to cover all the fields as potential join keys), we propose a way similar as building an index(we select interesting fields and maintain an index, instead of building indexes for every column combinations). A new keyword is proposed for this purpose, &#8221;<strong>PRECOMPUTE</strong>&#8221;. The usage of this keyword goes like this:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>CREATE TABLE People(id STRING, name String, age INT) PRECOMPUTE id;</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">People</span><span class="p">(</span><span class="n">id</span> <span class="n">STRING</span><span class="p">,</span> <span class="n">name</span> <span class="n">String</span><span class="p">,</span> <span class="n">age</span> <span class="nb">INT</span><span class="p">)</span> <span class="n">PRECOMPUTE</span> <span class="n">id</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>This will build a hashtable in advance in the memory. Note that <strong>once the hashtable exceeds the memory limits, the building process will automatically break and label this field as &#8216;bad for hash&#8217;.</strong></p>
 
 <p>Another advantage of this is that, consider the following query, :</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>Select * FROM People p Where p.age = '0000001';</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">Select</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">People</span> <span class="n">p</span> <span class="k">Where</span> <span class="n">p</span><span class="p">.</span><span class="n">age</span> <span class="o">=</span> <span class="s1">&#39;0000001&#39;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>The query will build a hashtable for small table whose size equals 1 (because of the single selection predicate). This will definitely fits in the memory. However, in previous implementation, if the file size exceeds 25MBs (or whatever defined by user), Hive will use Common Join to execute it, although it can use mapjoin instead (because the hashtable can fit in the memory) and achieve better performance!</p>
+
+<hr />
 
 <p>In our implementation, since we&#8217;ve build a hashtable beforehand, we now how many different keys the table contains (denoted as ICARD) and the total memory consumption of this hashtable (denoted as S). We can then get the selection factor sf by following equation:</p>
 
@@ -218,7 +603,11 @@ the pairs with the same key can be stored using just one key.).</li>
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2011/12/11/http-pipeline/">HTTP Pipeline</a>
+        <a href="/blog/2011/12/21/introduction-to-erlang-otp/">Introduction to Erlang OTP</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/12/20/introduction-to-erlang/">Introduction to Erlang</a>
       </li>
     
       <li class="post">

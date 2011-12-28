@@ -1,0 +1,339 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Introduction to Erlang - An Imbalist</title>
+  <meta name="author" content="Yunxing dai">
+
+  
+  <meta name="description" content="The term Erlang comes from &#8216;Erission
+Language&#8217;. It is designed for telecommunication industry with
+concurrency in mind. The most famous &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://Imbalism.github.com/blog/2011/12/20/introduction-to-erlang">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="An Imbalist" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">An Imbalist</a></h1>
+  
+    <h2>Because life is Imbalanced</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:Imbalism.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about.html">About</a></li>  
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Introduction to Erlang</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-20T23:08:00+08:00" pubdate data-updated="true">Dec 20<span>th</span>, 2011</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The term <a href="http://www.erlang.org/">Erlang</a> comes from &#8216;Erission
+Language&#8217;. It is designed for telecommunication industry with
+concurrency in mind.</p>
+
+<p>The most famous application of Erlang would probably be Facebook chat
+and Tencent QQ. Both are IM services that can support millions of
+users sending messages at the same time.</p>
+
+<p>Let&#8217;s start with a simple application so that you can have a basic
+understanding of how beautiful Erlang is.</p>
+
+<p>Suppose we have to implement a message passing ring of N nodes(A node
+is a process), a message will be passing through the ring for M
+times. Besides, we need to profile the program, see how much time it
+needs to be finished.</p>
+
+<p>Before you read the code written in Erlang, first think about how you
+can implement this in C or C++ code.</p>
+
+<p>Here we go, ready for some beautiful code?</p>
+
+<figure class='code'><figcaption><span> (ring.erl)</span> <a href='/downloads/code/ring.erl'>download</a></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">ring</span><span class="p">).</span>
+</span><span class='line'><span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">start</span><span class="o">/</span><span class="mi">2</span><span class="p">]).</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">gen</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nv">Y</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nb">spawn</span><span class="p">(</span><span class="k">fun</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">loop</span><span class="p">(</span><span class="nv">Y</span><span class="p">)</span> <span class="k">end</span><span class="p">);</span>
+</span><span class='line'><span class="nf">gen</span><span class="p">(</span><span class="nv">N</span><span class="p">,</span> <span class="nv">Y</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="n">gen</span><span class="p">(</span><span class="nv">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">spawn</span><span class="p">(</span><span class="k">fun</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">loop</span><span class="p">(</span><span class="nv">Y</span><span class="p">)</span> <span class="k">end</span><span class="p">)).</span>
+</span><span class='line'><span class="nf">gen</span><span class="p">(</span><span class="nv">N</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="n">gen</span><span class="p">(</span><span class="nv">N</span><span class="p">,</span> <span class="nb">spawn</span><span class="p">(</span><span class="k">fun</span> <span class="n">loop</span><span class="o">/</span><span class="mi">0</span><span class="p">)).</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">start</span><span class="p">(</span><span class="nv">N</span><span class="p">,</span> <span class="nv">M</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nv">Pid</span> <span class="o">=</span> <span class="n">gen</span><span class="p">(</span><span class="nv">N</span><span class="p">),</span>
+</span><span class='line'>    <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;start time:</span><span class="si">~p~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nn">erlang</span><span class="p">:</span><span class="n">now</span><span class="p">()]),</span>
+</span><span class='line'>    <span class="nv">Pid</span> <span class="o">!</span> <span class="p">{</span><span class="nv">Pid</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="n">self</span><span class="p">()},</span>
+</span><span class='line'>    <span class="k">receive</span>
+</span><span class='line'>  <span class="n">finished</span><span class="o">-&gt;</span>
+</span><span class='line'>      <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;end time:</span><span class="si">~p~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nn">erlang</span><span class="p">:</span><span class="n">now</span><span class="p">()])</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">loop</span><span class="p">()</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="k">receive</span>
+</span><span class='line'>  <span class="p">{_</span><span class="nv">Next</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">}</span><span class="o">-&gt;</span>
+</span><span class='line'>      <span class="nv">Dist</span><span class="o">!</span><span class="n">finished</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">{</span><span class="nv">Next</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">}</span><span class="o">-&gt;</span>
+</span><span class='line'>      <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;loop </span><span class="si">~p</span><span class="s"> finished</span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">M</span><span class="p">]),</span>
+</span><span class='line'>      <span class="nv">Next</span> <span class="o">!</span> <span class="p">{</span><span class="nv">Next</span><span class="p">,</span> <span class="nv">M</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">},</span>
+</span><span class='line'>      <span class="n">loop</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">loop</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span><span class="o">-&gt;</span>
+</span><span class='line'>    <span class="k">receive</span>    
+</span><span class='line'>  <span class="p">{</span><span class="nv">Src</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">}</span> <span class="o">-&gt;</span>
+</span><span class='line'>      <span class="nv">X</span> <span class="o">!</span> <span class="p">{</span><span class="nv">Src</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="nv">Dist</span><span class="p">},</span>
+</span><span class='line'>      <span class="n">loop</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p>Now that we&#8217;ve seen some code in Erlang. if you seen it is cool, you
+can go on with me and learn some basic concepts of it.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Yunxing dai</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-20T23:08:00+08:00" pubdate data-updated="true">Dec 20<span>th</span>, 2011</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://Imbalism.github.com/blog/2011/12/20/introduction-to-erlang/" data-via="" data-counturl="http://Imbalism.github.com/blog/2011/12/20/introduction-to-erlang/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/12/11/map-join-in-hive/" title="Previous Post: A Better Map join in Hive">&laquo; A Better Map join in Hive</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/12/21/introduction-to-erlang-otp/" title="next Post: Introduction to Erlang OTP">Introduction to Erlang OTP &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2011/12/21/introduction-to-erlang-otp/">Introduction to Erlang OTP</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/12/20/introduction-to-erlang/">Introduction to Erlang</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/12/11/map-join-in-hive/">A Better Map join in Hive</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2011 - Yunxing dai -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'imbalism';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://Imbalism.github.com/blog/2011/12/20/introduction-to-erlang/';
+        var disqus_url = 'http://Imbalism.github.com/blog/2011/12/20/introduction-to-erlang/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

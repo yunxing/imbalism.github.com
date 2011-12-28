@@ -129,19 +129,23 @@ the pairs with the same key can be stored using just one key.).</li>
 
 <p>Instead of trying to infer hashtable size at runtime, our solution, in short, tries to get the exactly hashtable size when loading data into the table. That is, we build a hash table beforehand, when we loads data into the table. To reduce the amount of hashtables (Cound be 2<sup>N</sup> tables if we want to cover all the fields as potential join keys), we propose a way similar as building an index(we select interesting fields and maintain an index, instead of building indexes for every column combinations). A new keyword is proposed for this purpose, &#8221;<strong>PRECOMPUTE</strong>&#8221;. The usage of this keyword goes like this:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>CREATE TABLE People(id STRING, name String, age INT) PRECOMPUTE id;</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">People</span><span class="p">(</span><span class="n">id</span> <span class="n">STRING</span><span class="p">,</span> <span class="n">name</span> <span class="n">String</span><span class="p">,</span> <span class="n">age</span> <span class="nb">INT</span><span class="p">)</span> <span class="n">PRECOMPUTE</span> <span class="n">id</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>This will build a hashtable in advance in the memory. Note that <strong>once the hashtable exceeds the memory limits, the building process will automatically break and label this field as &#8216;bad for hash&#8217;.</strong></p>
 
 <p>Another advantage of this is that, consider the following query, :</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>Select * FROM People p Where p.age = '0000001';</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">Select</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">People</span> <span class="n">p</span> <span class="k">Where</span> <span class="n">p</span><span class="p">.</span><span class="n">age</span> <span class="o">=</span> <span class="s1">&#39;0000001&#39;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>The query will build a hashtable for small table whose size equals 1 (because of the single selection predicate). This will definitely fits in the memory. However, in previous implementation, if the file size exceeds 25MBs (or whatever defined by user), Hive will use Common Join to execute it, although it can use mapjoin instead (because the hashtable can fit in the memory) and achieve better performance!</p>
+
+<hr />
 
 <p>In our implementation, since we&#8217;ve build a hashtable beforehand, we now how many different keys the table contains (denoted as ICARD) and the total memory consumption of this hashtable (denoted as S). We can then get the selection factor sf by following equation:</p>
 
@@ -204,7 +208,7 @@ the pairs with the same key can be stored using just one key.).</li>
     <p class="meta">
       
       
-        <a class="basic-alignment right" href="/blog/2011/12/11/http-pipeline/" title="next Post: HTTP Pipeline">HTTP Pipeline &raquo;</a>
+        <a class="basic-alignment right" href="/blog/2011/12/20/introduction-to-erlang/" title="next Post: Introduction to Erlang">Introduction to Erlang &raquo;</a>
       
     </p>
   </footer>
@@ -225,7 +229,11 @@ the pairs with the same key can be stored using just one key.).</li>
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2011/12/11/http-pipeline/">HTTP Pipeline</a>
+        <a href="/blog/2011/12/21/introduction-to-erlang-otp/">Introduction to Erlang OTP</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/12/20/introduction-to-erlang/">Introduction to Erlang</a>
       </li>
     
       <li class="post">
