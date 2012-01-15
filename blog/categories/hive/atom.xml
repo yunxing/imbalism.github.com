@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Hive | An Imbalist]]></title>
   <link href="http://Imbalism.github.com/blog/categories/hive/atom.xml" rel="self"/>
   <link href="http://Imbalism.github.com/"/>
-  <updated>2011-12-22T18:05:09+08:00</updated>
+  <updated>2012-01-14T22:04:36-05:00</updated>
   <id>http://Imbalism.github.com/</id>
   <author>
     <name><![CDATA[Yunxing dai]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[A Better Map join in Hive]]></title>
     <link href="http://Imbalism.github.com/blog/2011/12/11/map-join-in-hive/"/>
-    <updated>2011-12-11T01:47:00+08:00</updated>
+    <updated>2011-12-11T01:47:00-05:00</updated>
     <id>http://Imbalism.github.com/blog/2011/12/11/map-join-in-hive</id>
     <content type="html"><![CDATA[<p>Although <a href="hadoop.apache.org" title="Hadoop">Hadoop</a> provides a general way to handle distributed data, it is hard to write map reduce program every time you want to handle some data. At this time, <a href="hive.apache.org">Hive</a> comes into play to save people from the hell of writing map reduce programs.</p>
 
